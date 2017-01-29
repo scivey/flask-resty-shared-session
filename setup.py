@@ -1,6 +1,5 @@
 from setuptools import setup
 
-
 setup(
     name='flask-resty-shared-session',
     version='0.1.0',

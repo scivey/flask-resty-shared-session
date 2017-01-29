@@ -1,0 +1,7 @@
+tmp
+build
+.env
+*.sublime-workspace
+*.pyc
+__pycache__
+.cache

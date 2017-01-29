@@ -1,0 +1,148 @@
+import flask
+from flask import redirect, escape, url_for
+from app_server.config import session_redis, setup_logging
+from werkzeug.contrib.fixers import ProxyFix
+from app_server.util import make_id, json_response, now_timestamp
+from app_server.user import User
+from app_server.user_session import UserSession
+from app_server.errors import LoginError, Unauthorized, NotLoggedIn
+
+class Status(object):
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+
+
+def make_app():
+    from flask.ext.resty_shared_session import RestySharedSession
+    app = flask.Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app)
+    app.secret_key = 'fishes'
+    app.config['SESSION_TYPE'] = 'redis'
+    app.config['SESSION_REDIS'] = session_redis()
+    app.config['SESSION_USE_SIGNER'] = True
+    app.config['SESSION_PERMANENT'] = False
+    app.config['SESSION_KEY_PREFIX'] = 'app_session_prefix'
+    app.session_cookie_name = 'app_session_cookie'
+
+
+    # these settings are normally a good idea:
+    # app.config['SESSION_COOKIE_SECURE'] = True
+    # app.config['SESSION_COOKIE_HTTPONLY'] = True
+    RestySharedSession(app)
+    return app
+
+app = make_app()
+
+
+@app.route('/app', methods=['GET'])
+def home():
+    try:
+        sess = UserSession.get_current_or_fail()
+        return "Logged in as '%s'" % escape(sess.user.email)
+    except NotLoggedIn:
+        return "You are not logged in!"
+
+
+
+LOGIN_FORM = """
+    <form method="post">
+        <p><input type="text" name="email"/></p>
+        <p><input type="text" name="password"/></p>
+        <p><input type="submit" value="Login"></p>
+    </form>
+"""
+
+@app.route('/app/login', methods=['GET', 'POST'])
+def login():
+    if flask.request.method == 'POST':
+        email = flask.request.form['email']
+        password = flask.request.form['password']
+        user = User.attempt_login(email, password)
+        flask.current_app.session_interface.regenerate(flask.session)
+        flask.session['username'] = email
+        flask.session['groups'] = list(user.groups)
+        return redirect(url_for('home'))
+    return LOGIN_FORM
+
+
+@app.route('/app/logout', methods=['GET', 'POST'])
+def logout():
+    flask.current_app.session_interface.destroy(flask.session)
+    return redirect(url_for('home'))
+
+
+@app.route('/app/api/v1/myself', methods=['GET'])
+def myself_api():
+    try:
+        sess = UserSession.get_current_or_fail()
+        return flask.jsonify({
+            'email': sess.user.email
+        })
+    except NotLoggedIn:
+        return json_response(dict(error='not logged in!'), status=401)
+
+
+@app.route('/app/group/<group_id>/cacheable/<page_name>', methods=['GET'])
+def group_cacheable_page(group_id, page_name):
+    sess = UserSession.get_current_or_fail()
+    sess.user.verify_group_access(group_id)
+    doc = """
+        <html>
+        <h2>{group_id} CACHEABLE PAGE: {page_name}</h2>
+        <div>
+            <p>render_id:        {render_id}</p>
+            <p>render_timestamp: {render_timestamp}</p>
+        </div>
+        </html>
+    """.format(group_id=group_id,
+        page_name=page_name,
+        render_id=make_id(),
+        render_timestamp=now_timestamp()
+    )
+    return flask.make_response(doc)
+
+
+@app.route('/app/group/<group_id>/uncacheable/<page_name>', methods=['GET'])
+def group_uncacheable_page(group_id, page_name):
+    sess = UserSession.get_current_or_fail()
+    sess.user.verify_group_access(group_id)
+    doc = """
+        <html>
+        <h2>{group_id} UNCACHEABLE PAGE: {page_name}</h2>
+        <h3>You are: {user}</h3>
+        <div>
+            <p>render_id:        {render_id}</p>
+            <p>render_timestamp: {render_timestamp}</p>
+        </div>
+        </html>
+    """.format(user=sess.user.email,
+        group_id=group_id,
+        page_name=page_name,
+        render_id=make_id(),
+        render_timestamp=now_timestamp()
+    )
+    return flask.make_response(doc)
+
+
+@app.route('/', methods=['GET'])
+def handle_404():
+    return flask.jsonify(**{}), 404
+
+@app.errorhandler(LoginError)
+def login_error_handler(err):
+    response = flask.make_response(LOGIN_FORM)
+    response.status_code = 403
+    return response
+
+
+@app.errorhandler(Unauthorized)
+def handle_unauthorized(err):
+    return flask.jsonify(**{
+        'error': str(err),
+        'error_id': make_id()
+    }), Status.UNAUTHORIZED
+
+
+if __name__ == '__main__':
+    setup_logging()
+    app.run(host='0.0.0.0', port=5017, debug=True)

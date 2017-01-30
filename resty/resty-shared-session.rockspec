@@ -1,9 +1,9 @@
 package = "resty-shared-session"
-version = "0.1.1-1"
+version = "0.1.1-2"
 
 source = {
   url = "git://github.com/scivey/flask-resty-shared-session.git",
-  tag = "v0.1.1-1",
+  tag = "v0.1.1-2",
 }
 
 description = {
@@ -20,6 +20,6 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        ["resty.shared_session"] = "lib/resty/shared_session.lua"
+        ["resty.shared_session"] = "resty/lib/resty/shared_session.lua"
     }
 }

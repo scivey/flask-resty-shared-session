@@ -6,3 +6,4 @@ build
 __pycache__
 .cache
 .envrc-extra
+tmp_scripts

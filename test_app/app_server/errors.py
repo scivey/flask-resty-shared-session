@@ -14,7 +14,5 @@ class UserNotFound(LoginError):
 class Unauthorized(AuthError):
     pass
 
-class NotLoggedIn(Unauthorized):
+class NotLoggedIn(AuthError):
     pass
-
-

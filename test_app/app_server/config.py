@@ -6,10 +6,10 @@ class Configurator(object):
     REDIS_HOST = 'localhost'
     REDIS_PORT = 6379
     REDIS_SESSION_DB = 12
+    SESSION_COOKIE_NAME = 'app_session_cookie'
+    CACHE_TIMEOUT_SECS = 3
 
 CONFIG = Configurator()
-
-CACHEABLE_TIMEOUT_SECS = 5
 
 def session_redis():
     return redis.StrictRedis(

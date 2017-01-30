@@ -54,7 +54,8 @@ class SessionInterface(FlaskSessionInterface):
     def _get_signer(self, app):
         if not app.secret_key:
             return None
-        return Signer(app.secret_key, salt='flask-resty-session',
+        salt = getattr(app, 'session_cookie_salt', 'flask-resty-session')
+        return Signer(app.secret_key, salt=salt,
                       key_derivation='hmac')
 
 

@@ -1,12 +1,13 @@
 from .errors import UserNotFound, BadPassword, LoginError, Unauthorized
 
-_STATIC_USERS = (
-    ('joe@gmail.com', 'jj612', ('one', 'three')),
-    ('sam@gmail.com', 'itssam', ('two',)),
-    ('maria@gmail.com', 'solvinproblems', tuple())
+USER_FIXTURES = (
+    {'email': 'joe@gmail.com', 'password': 'itsjoe', 'groups': ('one', 'three')},
+    {'email': 'sam@gmail.com', 'password': 'itssam', 'groups': ('two',)},
+    {'email': 'esteban@gmail.com', 'password': 'itsesteban', 'groups': ('one', 'four')},
+    {'email': 'maria@gmail.com', 'password': 'itsmaria', 'groups': tuple()}
 )
 
-_STATIC_USERS = {u[0]: u for u in _STATIC_USERS}
+USER_FIXTURES_BY_EMAIL = {u['email']: u for u in USER_FIXTURES}
 
 class User(object):
     def __init__(self, email, password, groups=None):
@@ -16,11 +17,15 @@ class User(object):
 
     @classmethod
     def by_email(cls, email):
-        user_data = _STATIC_USERS.get(email)
+        user_data = USER_FIXTURES_BY_EMAIL.get(email)
         if user_data is None:
             raise UserNotFound(email)
-        assert user_data[0] == email
-        return cls(email=user_data[0], password=user_data[1], groups=user_data[2])
+        assert user_data['email'] == email
+        return cls(
+            email=user_data['email'],
+            password=user_data['password'],
+            groups=user_data['groups']
+        )
 
     def check_password(self, pw):
         if pw != self.password:

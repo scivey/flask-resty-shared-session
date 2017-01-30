@@ -1,7 +1,12 @@
--- this would normally be imported as "resty.shared_session"
+local redis = require "resty.redis"
+
+
+-- this would normally be imported as "resty.shared_session".
+-- here the module is symlinked to a local directory, so we're
+-- always using the current development copy instead of
+-- whatever LuaRocks happens to have installed on this system.
 local shared_session = require "local_resty.shared_session"
 
-local redis = require "resty.redis"
 
 
 local function fail_500(err)

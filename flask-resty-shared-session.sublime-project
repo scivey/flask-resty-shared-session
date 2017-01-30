@@ -3,8 +3,10 @@
 	[
 		{
 			"path": ".",
-            "folder_exclude_patterns": [".env", "build", "tmp", "__pycache__", ".cache"],
-            "file_exclude_patterns": ["*.log"]
+            "folder_exclude_patterns": [
+                ".env", "build", "tmp", "__pycache__", ".cache", "*.egg-info"
+            ],
+            "file_exclude_patterns": ["*.log", "*.tar.gz"]
 		}
 	]
 }

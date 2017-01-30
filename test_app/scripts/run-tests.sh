@@ -11,7 +11,7 @@ function run-all() {
     local resty_log="${test_logs_dir}/resty.log"
     local flask_log="${test_logs_dir}/flask.log"
 
-    echo "flask will log to ${resty_log}" >&2
+    echo "flask will log to ${flask_log}" >&2
     echo "resty will log to ${resty_log}" >&2
 
     local scripts=${TESTAPP_SCRIPTS_DIR}
@@ -25,7 +25,7 @@ function run-all() {
     local resty_pid="$!"
 
     sleep 0.1
-    ${scripts}/run-tests.sh &
+    ${scripts}/run-pytest.sh &
     local tests_pid="$!"
 
     wait ${tests_pid}

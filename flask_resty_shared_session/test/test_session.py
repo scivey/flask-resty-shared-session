@@ -1,7 +1,5 @@
 from __future__ import print_function
-from pprint import pprint
 import unittest
-import tempfile
 import flask
 import traceback
 import sys

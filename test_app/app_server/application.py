@@ -3,8 +3,7 @@ from flask import redirect, escape, url_for
 from app_server.config import session_redis, setup_logging
 from werkzeug.contrib.fixers import ProxyFix
 from app_server.util import (
-    make_id, json_response, now_timestamp,
-    cacheable_headers, uncacheable_headers
+    make_id, now_timestamp
 )
 from app_server.user import User
 from app_server.user_session import UserSession
@@ -108,7 +107,6 @@ def group_cacheable_resource_api(group_id, resource_id):
 def group_cacheable_resource_page(group_id, resource_id):
     sess = UserSession.get_current_or_fail()
     sess.user.verify_group_access(group_id)
-    contex = _make_resource_data(group_id, resource_id)
     doc = """
         <html>
         <h2>{group_id} CACHEABLE RESOURCE: {resource_id}</h2>

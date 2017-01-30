@@ -1,7 +1,7 @@
 from __future__ import print_function
 import requests
 import requests.cookies
-from copy import copy, deepcopy
+from copy import deepcopy
 import urllib
 import json
 import unittest
@@ -165,7 +165,6 @@ class TestGroupResources(unittest.TestCase):
         self.assertTrue(response.status_code < 400)
 
     def test_uncacheable(self):
-        target = api_url('/group/one/uncacheable/foo')
         one_foo_1 = self.joec.get_uncacheable_group_resource('one', 'foo')
         self.assertTrue(one_foo_1.status_code < 300)
         one_foo_2 = self.joec.get_uncacheable_group_resource('one', 'foo')

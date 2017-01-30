@@ -7,8 +7,6 @@
 # adaptations (c) 2017 by Scott Ivey, also under BSD license.
 
 import sys
-import time
-from datetime import datetime
 from uuid import uuid4
 import json
 from flask.sessions import SessionInterface as FlaskSessionInterface

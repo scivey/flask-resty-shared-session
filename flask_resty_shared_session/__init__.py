@@ -6,9 +6,9 @@
 
 # adaptations (c) 2017 by Scott Ivey, also under BSD license.
 
-__version__ = '0.1.0'
+from .version import VERSION
 
-import os
+__version__ = VERSION
 
 from .sessions import NullSessionInterface, RedisSessionInterface
 

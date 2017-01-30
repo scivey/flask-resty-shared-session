@@ -12,7 +12,8 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=[
-        'Flask>=0.8'
+        'Flask>=0.8',
+        'redis>=2.10.5'
     ],
     classifiers=[
         'Environment :: Web Environment',

@@ -1,5 +1,5 @@
 -- this would normally be imported as "resty.shared_session"
-local shared_session = require "shared_session"
+local shared_session = require "local_resty.shared_session"
 
 local redis = require "resty.redis"
 local red = redis:new()

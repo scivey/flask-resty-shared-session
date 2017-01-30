@@ -2,10 +2,14 @@ import flask
 from flask import redirect, escape, url_for
 from app_server.config import session_redis, setup_logging
 from werkzeug.contrib.fixers import ProxyFix
-from app_server.util import make_id, json_response, now_timestamp
+from app_server.util import (
+    make_id, json_response, now_timestamp,
+    cacheable_headers, uncacheable_headers
+)
 from app_server.user import User
 from app_server.user_session import UserSession
 from app_server.errors import LoginError, Unauthorized, NotLoggedIn
+from app_server.config import CACHEABLE_TIMEOUT_SECS
 
 class Status(object):
     UNAUTHORIZED = 401
@@ -99,8 +103,9 @@ def group_cacheable_page(group_id, page_name):
         render_id=make_id(),
         render_timestamp=now_timestamp()
     )
-    return flask.make_response(doc)
-
+    response = flask.make_response(doc)
+    response.headers['Cache-Control'] = 'max-age=%i' % CACHEABLE_TIMEOUT_SECS
+    return response
 
 @app.route('/app/group/<group_id>/uncacheable/<page_name>', methods=['GET'])
 def group_uncacheable_page(group_id, page_name):
@@ -121,8 +126,9 @@ def group_uncacheable_page(group_id, page_name):
         render_id=make_id(),
         render_timestamp=now_timestamp()
     )
-    return flask.make_response(doc)
-
+    response = flask.make_response(doc)
+    response.headers['Cache-Control'] = 'no-cache'
+    return response
 
 @app.route('/', methods=['GET'])
 def handle_404():

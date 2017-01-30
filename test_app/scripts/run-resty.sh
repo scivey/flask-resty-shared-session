@@ -6,8 +6,10 @@ pushd ${TESTAPP_ROOT_DIR}
 mkdir -p tmp/logs
 pushd tmp
 
-rm -f sitelib
+rm -f sitelib local_resty
 ln -s ${TESTAPP_ROOT_DIR}/resty_conf/sitelib sitelib
+ln -s ${TESTAPP_ROOT_DIR}/../resty/lib/resty local_resty
+
 
 CACHE_DIRS="group_cache"
 for dname in $CACHE_DIRS; do

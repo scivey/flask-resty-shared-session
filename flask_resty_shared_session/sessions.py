@@ -10,11 +10,7 @@ import sys
 import time
 from datetime import datetime
 from uuid import uuid4
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
+import json
 from flask.sessions import SessionInterface as FlaskSessionInterface
 from flask.sessions import SessionMixin
 from werkzeug.datastructures import CallbackDict
@@ -82,7 +78,7 @@ class RedisSessionInterface(SessionInterface):
     :param permanent: Whether to use permanent session or not.
     """
 
-    serializer = pickle
+    serializer = json
     session_class = RedisSession
 
     def __init__(self, redis, key_prefix, use_signer=True, permanent=True):

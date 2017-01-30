@@ -1,14 +1,14 @@
 package = "resty-shared-session"
-version = "0.1.0-1"
+version = "0.1.1-1"
 
 source = {
-  url = "git://github.com/scivey/flask_resty_shared_session.git",
-  tag = "v0.1.0-1",
+  url = "git://github.com/scivey/flask-resty-shared-session.git",
+  tag = "v0.1.1-1",
 }
 
 description = {
   summary = "Redis-based sessions shared between flask and openresty",
-  homepage = "https://github.com/scivey/flask_resty_shared_session.git",
+  homepage = "https://github.com/scivey/flask-resty-shared-session",
   license = "MIT",
 }
 

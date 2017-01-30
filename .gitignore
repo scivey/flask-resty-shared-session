@@ -10,3 +10,5 @@ tmp_scripts
 dist
 *.egg-info
 *.tar.gz
+*.rock
+

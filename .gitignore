@@ -7,3 +7,6 @@ __pycache__
 .cache
 .envrc-extra
 tmp_scripts
+dist
+*.egg-info
+*.tar.gz

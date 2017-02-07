@@ -9,17 +9,47 @@
 import sys
 from uuid import uuid4
 import json
+import functools
 from flask.sessions import SessionInterface as FlaskSessionInterface
 from flask.sessions import SessionMixin
 from werkzeug.datastructures import CallbackDict
 from itsdangerous import Signer, BadSignature, want_bytes
 
-
 PY2 = sys.version_info[0] == 2
-if not PY2:
-    text_type = str
-else:
+if PY2:
     text_type = unicode
+    bytes_type = str
+else:
+    text_type = str
+    bytes_type = bytes
+
+
+def is_texty(x):
+    return isinstance(x, (text_type, bytes_type))
+
+def want_str(maybe_bytes):
+    if not PY2 and isinstance(maybe_bytes, bytes_type):
+        maybe_bytes = maybe_bytes.decode('utf8')
+    return maybe_bytes
+
+def returns_bytes(func):
+    @functools.wraps(func)
+    def _wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        if is_texty(result):
+            result = want_bytes(result)
+        return result
+    return _wrapper
+
+
+def str_fmt(fmt, *args):
+    fmt = want_str(fmt)
+    fixed_args = []
+    for arg in args:
+        if is_texty(arg):
+            arg = want_str(arg)
+        fixed_args.append(arg)
+    return fmt % tuple(fixed_args)
 
 
 def total_seconds(td):
@@ -65,6 +95,20 @@ class NullSessionInterface(SessionInterface):
         return None
 
 
+def invert_string(x):
+    # bytes -> unicode; unicode -> bytes
+    if isinstance(x, bytes_type):
+        return x.decode('utf8')
+    return x.encode('utf8')
+
+def get_str_key(dict_like, key):
+    if key not in dict_like:
+        inverted = invert_string(key)
+        if inverted in dict_like:
+            key = inverted
+    return dict_like.get(key)
+
+
 class RedisSessionInterface(SessionInterface):
     """Uses the Redis key-value store as a session backend.
 
@@ -90,7 +134,8 @@ class RedisSessionInterface(SessionInterface):
         self.permanent = permanent
 
     def open_session(self, app, request):
-        sid = request.cookies.get(app.session_cookie_name)
+        # sid = request.cookies.get(app.session_cookie_name)
+        sid = get_str_key(request.cookies, app.session_cookie_name)
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
@@ -110,20 +155,24 @@ class RedisSessionInterface(SessionInterface):
         value = self.redis.get(self._get_redis_data_key(sid))
         if value is not None:
             try:
-                data = self.serializer.loads(value)
+                # in py3, json module will throw if given bytes
+                data = self.serializer.loads(want_str(value))
                 return self.session_class(data, sid=sid)
             except:
                 return self.session_class(sid=sid, permanent=self.permanent)
         return self.session_class(sid=sid, permanent=self.permanent)
 
+    @returns_bytes
     def _get_redis_data_key(self, session_id):
-        return '%s:data:%s' % (self.key_prefix, session_id)
+        return str_fmt('%s:data:%s', self.key_prefix, session_id)
 
+    @returns_bytes
     def _get_redis_groups_key(self, session_id):
-        return '%s:groups:%s' % (self.key_prefix, session_id)
+        return str_fmt('%s:groups:%s', self.key_prefix, session_id)
 
+    @returns_bytes
     def _get_redis_signature_key(self, session_id):
-        return '%s:signature:%s' % (self.key_prefix, session_id)
+        return str_fmt('%s:signature:%s', self.key_prefix, session_id)
 
     def _get_session_keys(self, session_id):
         return [
@@ -168,10 +217,10 @@ class RedisSessionInterface(SessionInterface):
 
         if self.use_signer:
             session_cookie_val = self._get_signer(app).sign(want_bytes(session.sid))
-            session_signature = session_cookie_val[session_cookie_val.index('.')+1:]
+            session_signature = session_cookie_val[session_cookie_val.index(b'.')+1:]
         else:
             session_cookie_val = session.sid
-            session_signature = ''
+            session_signature = b''
 
         session_data_key = self._get_redis_data_key(session.sid)
         session_groups_key = self._get_redis_groups_key(session.sid)
